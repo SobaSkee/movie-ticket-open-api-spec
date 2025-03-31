@@ -1,0 +1,116 @@
+openapi: 3.0.0
+info:
+  title: Movie Ticket Payment API
+  description: API for processing payments when purchasing movie tickets online, ensuring secure transactions.
+  version: 1.0.0
+servers:
+  - url: https://api.movietickets.com/v1
+    description: Production server
+paths:
+  /payment:
+    get:
+      summary: Retrieve payment details from customer
+      description: Fetch the status and details of a specific payment transaction.
+      parameters:
+        - name: transactionId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Unique transaction ID to look up payment details.
+      responses:
+        "200":
+          description: Successfully retrieved payment details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [success, failed, pending]
+                  amount:
+                    type: number
+                    format: float
+                  message:
+                    type: string
+        "404":
+          description: Transaction not found
+    post:
+      summary: Process payments for movie tickets
+      description: This endpoint processesing payments and returns a confirmation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: Unique ID of the user making the payment
+                movieId:
+                  type: string
+                  description: ID of the selected movie
+                seatNumber:
+                  type: string
+                  description: Selected seat number
+                cardDetails:
+                  type: object
+                  properties:
+                    cardNumber:
+                      type: string
+                      description: Encrypted card number
+                    expiryDate:
+                      type: string
+                      description: Card expiration date
+                    cvv:
+                      type: string
+                      description: Card CVV
+              required:
+                - userId
+                - movieId
+                - seatNumber
+                - paymentMethod
+      responses:
+        "200":
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId:
+                    type: string
+                    description: Unique transaction ID
+                  status:
+                    type: string
+                    enum: [success, failed]
+                    description: Payment status
+                  message:
+                    type: string
+                    description: Payment confirmation message
+        "400":
+          description: Invalid request parameters
+        "500":
+          description: Internal server error
+  /payment/{transactionId}:
+    delete:
+      summary: Cancel a payment transaction
+      description: Cancels a pending or failed payment transaction before processing is finalized.
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique transaction ID to cancel.
+      responses:
+        "200":
+          description: Payment successfully canceled
+        "400":
+          description: Invalid request parameters or transaction already completed
+        "404":
+          description: Transaction not found
